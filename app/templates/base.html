@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} TaskFlow Dashboard {% endblock %}</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Dynamic Theme Prevention Layer (Blocks white flash on dark theme load) -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+</head>
+<body>
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Flash Messages Source for JS Toast Engine (Hidden) -->
+    <div id="flash-messages-source" style="display: none;">
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                {% for category, msg in messages %}
+                    <div class="flash-message-item" data-category="{{ category }}" data-message="{{ msg }}"></div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('tasks.view_tasks') }}" class="brand">
+                <i class="fa-solid fa-square-check brand-icon"></i>
+                <span class="brand-text">Task<span class="accent-text">Flow</span></span>
+            </a>
+            
+            <nav class="nav-links">
+                {% if 'user_id' in session %}
+                    <span class="user-greeting">
+                        <i class="fa-solid fa-circle-user"></i>
+                        <span>Hi, <strong>{{ session['username'] }}</strong></span>
+                    </span>
+                    <button id="theme-toggle" class="nav-btn theme-btn" aria-label="Toggle Dark/Light Mode">
+                        <i class="fa-solid fa-moon moon-icon"></i>
+                        <i class="fa-solid fa-sun sun-icon"></i>
+                    </button>
+                    <a href="{{ url_for('auth.logout') }}" class="nav-btn logout-btn">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Logout</span>
+                    </a>
+                {% else %}
+                    <button id="theme-toggle" class="nav-btn theme-btn" aria-label="Toggle Dark/Light Mode">
+                        <i class="fa-solid fa-moon moon-icon"></i>
+                        <i class="fa-solid fa-sun sun-icon"></i>
+                    </button>
+                    <a href="{{ url_for('auth.login') }}" class="nav-btn login-btn">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>Login</span>
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="nav-btn register-nav-btn">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>Register</span>
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        {% block content %} {% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>&copy; 2026 TaskFlow. Designed for ultimate productivity.</p>
+        </div>
+    </footer>
+
+    <!-- Interactive Client Script -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

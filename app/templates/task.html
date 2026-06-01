@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - TaskFlow{% endblock %}
+
+{% block content %}
+<div class="dashboard-container container animate-fade-in">
+    
+    <!-- Top Statistics Cards -->
+    <div class="metrics-grid">
+        <div class="metric-card glassmorphic" id="metric-total">
+            <div class="metric-icon total-bg"><i class="fa-solid fa-list-check"></i></div>
+            <div class="metric-info">
+                <h3>Total Tasks</h3>
+                <p class="metric-value" id="stats-total">{{ stats.total }}</p>
+            </div>
+        </div>
+        
+        <div class="metric-card glassmorphic" id="metric-pending">
+            <div class="metric-icon pending-bg"><i class="fa-solid fa-clock"></i></div>
+            <div class="metric-info">
+                <h3>Pending</h3>
+                <p class="metric-value" id="stats-pending">{{ stats.pending }}</p>
+            </div>
+        </div>
+        
+        <div class="metric-card glassmorphic" id="metric-working">
+            <div class="metric-icon working-bg"><i class="fa-solid fa-spinner"></i></div>
+            <div class="metric-info">
+                <h3>Working</h3>
+                <p class="metric-value" id="stats-working">{{ stats.working }}</p>
+            </div>
+        </div>
+        
+        <div class="metric-card glassmorphic" id="metric-completed">
+            <div class="metric-icon completed-bg"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="metric-info">
+                <h3>Completed</h3>
+                <p class="metric-value" id="stats-completed">{{ stats.done }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workspace Progress Section -->
+    <div class="analytics-section" style="margin-top: 8px;">
+        <!-- Progress Bar Card -->
+        <div class="analytics-card progress-card glassmorphic" style="padding: 24px; display: flex; flex-direction: column;">
+            <div class="card-header" style="margin-bottom: 12px;">
+                <h2><i class="fa-solid fa-bars-progress header-icon"></i> Workspace Progress</h2>
+            </div>
+            <div class="progress-details" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="progress-meta" style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <span id="progress-percentage-text" style="font-size: 36px; font-weight: 800; color: var(--accent-color);">0%</span>
+                    <span id="progress-fraction-text" class="progress-label" style="font-size: 14px; font-weight: 600; color: var(--text-secondary);">Completed 0 / 0</span>
+                </div>
+                <div class="progress-track" style="width: 100%; height: 10px; background-color: var(--border-color); border-radius: 5px; overflow: hidden; margin-top: 8px;">
+                    <div id="progress-bar-fill" class="progress-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-color), var(--color-done)); border-radius: 5px; transition: width 0.6s ease;"></div>
+                </div>
+                <p class="progress-subtext" style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Optimizing your task performance workflow.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Creation & Filtering Controls Card -->
+    <div class="dashboard-controls glassmorphic">
+        <div class="card-header" style="margin-bottom: 16px;">
+            <h2><i class="fa-solid fa-square-plus header-icon"></i> Create a New Task</h2>
+        </div>
+        
+        <!-- AJAX-intercepted Task Creation Form -->
+        <form id="add-task-form" class="add-task-form">
+            <div class="form-input-group">
+                <input type="text" id="task-title-input" placeholder="What needs to be done?" required autocomplete="off">
+            </div>
+            <div class="form-select-group">
+                <select id="task-priority-input" aria-label="Task Priority">
+                    <option value="Low">🟢 Low Priority</option>
+                    <option value="Medium" selected>🟡 Medium Priority</option>
+                    <option value="High">🔥 High Priority</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Task</span>
+            </button>
+        </form>
+
+        <hr class="controls-divider" style="margin: 20px 0;">
+
+        <!-- Search and Live Filters bar -->
+        <div class="filter-search-bar">
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="task-search-input" placeholder="Search tasks by title..." autocomplete="off">
+            </div>
+            
+            <div class="filter-actions-wrapper">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="Pending">Pending</button>
+                    <button class="filter-btn" data-filter="Working">Working</button>
+                    <button class="filter-btn" data-filter="Done">Done</button>
+                </div>
+                
+                <button id="clear-all-btn" class="btn btn-danger btn-sm" title="Delete All Tasks">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Clear All</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workspace Task Cards List -->
+    <div class="task-list-wrapper">
+        <div class="task-list-header">
+            <h2><i class="fa-solid fa-list-ul header-icon"></i> Tasks Workspace</h2>
+            <span class="badge" id="task-workspace-badge" style="background-color: var(--border-color); color: var(--text-secondary); font-size: 12px; font-weight: 700; border-radius: 20px; padding: 4px 10px;">{{ stats.total }} tasks</span>
+        </div>
+        
+        <div id="tasks-container" class="tasks-grid">
+            {% if tasks %}
+                {% for task in tasks %}
+                <div class="task-card glassmorphic animate-fade-in" data-id="{{ task.id }}" data-status="{{ task.status }}">
+                    <div class="task-card-content">
+                        <div class="task-title-group">
+                            <span class="task-card-index">#{{ loop.index }}</span>
+                            <h3 class="task-title-text" {% if task.status == 'Done' %}style="text-decoration: line-through; color: var(--text-muted);"{% endif %}>
+                                {{ task.title }}
+                            </h3>
+                        </div>
+                        <div class="task-badges">
+                            <!-- Status badge -->
+                            <span class="badge badge-status badge-{{ task.status|lower }}">{{ task.status }}</span>
+                            
+                            <!-- Priority badge -->
+                            <span class="badge badge-priority badge-prio-{{ task.priority|lower }}">
+                                {% if task.priority == 'High' %}
+                                    🔥 High
+                                {% elif task.priority == 'Medium' %}
+                                    🟡 Medium
+                                {% else %}
+                                    🟢 Low
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="task-card-actions">
+                        <!-- AJAX status button -->
+                        <button class="action-btn btn-status-toggle" data-id="{{ task.id }}" title="Cycle Status">
+                            <i class="fa-solid fa-circle-notch"></i>
+                            <span>Cycle Status</span>
+                        </button>
+                        
+                        <!-- AJAX delete button -->
+                        <button class="action-btn btn-task-delete" data-id="{{ task.id }}" title="Delete Task">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-tasks-state animate-fade-in" id="no-tasks-placeholder">
+                    <div class="no-tasks-icon"><i class="fa-solid fa-clipboard-question"></i></div>
+                    <h3>Your workspace is clear</h3>
+                    <p>No tasks found. Add a task above to get started!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
